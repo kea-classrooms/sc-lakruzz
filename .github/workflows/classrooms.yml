@@ -24,3 +24,45 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
+
+      # The following steps are optional and are used to add comments to the pull request with the results of the autograding.
+      - name: Copy autograding results to workspace
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/results
+          cp -r autograding/results/* $GITHUB_WORKSPACE/results
+
+      - name: Upload autograding results
+        uses: actions/upload-artifact@v2
+        with:
+          name: results
+          path: results
+
+      - name: Create autograding comment
+        uses: education/create-autograding-comment@v1
+        with:
+          results-path: results
+          autograding-json-path: autograding/autograding.json
+          dispatch-token: ${{ secrets.DISPATCH_TOKEN }}
+          repository: ${{ github.repository }}
+          pull-request: ${{ github.event.pull_request.number }}
+          run-id: ${{ github.run_id }}
+
+      - name: Dispatch autograding event
+        uses: education/dispatch-autograding-event@v1
+        with:
+          dispatch-token: ${{ secrets.DISPATCH_TOKEN }}
+          repository: ${{ github.repository }}
+          pull-request: ${{ github.event.pull_request.number }}
+          run-id: ${{ github.run_id }}
+          event-type: ${{ github.event_name }}
+
+      # The following step is optional and is used to add a grade to the pull request with the results of the autograding.
+      - name: Dispatch grade event
+        uses: education/dispatch-grade-event@v1
+        with:
+          dispatch-token: ${{ secrets.DISPATCH_TOKEN }}
+          repository: ${{ github.repository }}
+          pull-request: ${{ github.event.pull_request.number }}
+          run-id: ${{ github.run_id }}
+          event-type: ${{ github.event_name }}# 
+
